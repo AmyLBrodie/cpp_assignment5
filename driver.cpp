@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     int r1, r2, s1, s2;
     float fr1, fr2;
     const int mono=1;
-    const int stereo =2;
+    const float stereo =2.0f;
     
     for (int i=0; i<argc; i++){
         temp = string(argv[i]);
@@ -61,17 +61,20 @@ int main(int argc, char** argv) {
             outputFile = string(argv[i+1]);
             soundFile1 = string(argv[i+2]);
             soundFile2 = string(argv[i+3]);
-            BRDAMY004::Audio<int8_t, mono> audio(sampleRate, bitSize, channel);
+            BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
             audio.loadToBuffer(soundFile1);
             //audio.writeToFile(outputFile);
-            BRDAMY004::Audio<int8_t, mono> audio2(sampleRate, bitSize, channel);
+            BRDAMY004::Audio<int8_t,int> audio2(sampleRate, bitSize, channel);
             audio2.loadToBuffer(soundFile2);
             //audio.concatenate(audio2);
-            //audio.volume(0.75f,0.0f);
+            //audio.volume(0.75f,0.5f);
             //audio.add(audio2);
             //audio.cut(300000, 600000);
             //audio.reverse();
             //audio.rangedAdd(audio2, 6,12,8,14);
+            audio.rms();
+            audio.normalise(6.0f, 0.0f);
+            audio.rms();
             audio.writeToFile(outputFile);
         }
         else if (temp == "-add"){
