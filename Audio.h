@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 namespace BRDAMY004{
     template <typename T, int N=1>
     class Audio{
@@ -46,8 +47,8 @@ namespace BRDAMY004{
         
         void add(Audio & audio2);
         void cut(int r1, int r2);
-        void rangedAdd();
-        void concatenate(Audio<T,N> & audio2);
+        void rangedAdd(Audio & audio2, int r1, int r2, int s1, int s2);
+        void concatenate(Audio & audio2);
         void volume(float f1, float f2);
         void reverse();
         void rms();
@@ -62,14 +63,14 @@ namespace BRDAMY004{
     }
     
     template <typename T, int N>
-    Audio<T,N>::Audio(Audio & rhs) : sampleRate(rhs.sampleRate), bitSize(rhs.bitSize), channel(rhs.channel), numberOfSamples(rhs.numberOfSamples), seconds(rhs.seconds){
+    Audio<T,N>::Audio(Audio<T,N> & rhs) : sampleRate(rhs.sampleRate), bitSize(rhs.bitSize), channel(rhs.channel), numberOfSamples(rhs.numberOfSamples), seconds(rhs.seconds){
         for (int i=0; i<numberOfSamples; i++){
             data_buffer.push_back(rhs.data_buffer[i]);
         }
     }
     
     template <typename T, int N>
-    Audio<T,N>::Audio(Audio&& rhs) : sampleRate(rhs.sampleRate), bitSize(rhs.bitSize), channel(rhs.channel), numberOfSamples(rhs.numberOfSamples), seconds(rhs.seconds), data_buffer(std::move(rhs.data_buffer)){
+    Audio<T,N>::Audio(Audio<T,N> && rhs) : sampleRate(rhs.sampleRate), bitSize(rhs.bitSize), channel(rhs.channel), numberOfSamples(rhs.numberOfSamples), seconds(rhs.seconds), data_buffer(std::move(rhs.data_buffer)){
         rhs.sampleRate = 0;
         rhs.numberOfSamples = 0;
         rhs.channel = 0;
@@ -86,7 +87,7 @@ namespace BRDAMY004{
             seconds = rhs.seconds;
             bitSize = rhs.bitSize;
             channel = rhs.channel;
-            data_buffer.empty();
+            data_buffer.clear();
             for(int i=0; i<numberOfSamples; i++){
                 data_buffer.push_back(rhs.data_buffer[i]);
             }   
@@ -95,7 +96,7 @@ namespace BRDAMY004{
     }
     
     template <typename T, int N>
-    Audio<T,N> & Audio<T,N>::operator=(Audio&& rhs){
+    Audio<T,N> & Audio<T,N>::operator=(Audio<T,N> && rhs){
         if (*this != rhs){
             sampleRate = rhs.sampleRate;
             numberOfSamples = rhs.numberOfSamples;
@@ -122,16 +123,16 @@ namespace BRDAMY004{
         fileSize = stream.tellg();
         stream.seekg(0, stream.beg);
         
-        Audio::numberOfSamples = fileSize / (sizeof(T) * Audio::channel);
-        Audio::seconds = Audio::numberOfSamples/(float) Audio::sampleRate;
+        numberOfSamples = fileSize / (sizeof(T) * channel);
+        seconds = numberOfSamples/(float) sampleRate;
         
-        Audio::data_buffer.resize(Audio::numberOfSamples);
+        data_buffer.resize(numberOfSamples);
         
-        stream.read((char *)&data_buffer[0], Audio::numberOfSamples);
+        stream.read((char *)&data_buffer[0], numberOfSamples);
         
         stream.close();
         
-        std::cout << fileSize << ":" << Audio::seconds << std::endl;
+        std::cout << fileSize << ":" << seconds << std::endl;
     }
     
     template <typename T,int N>
@@ -145,7 +146,6 @@ namespace BRDAMY004{
     
     template <typename T, int N>
      Audio<T,N> & Audio<T,N>::operator|(Audio<T,N> & audio2){
-        std::cout << "hi " << std::endl;
         numberOfSamples = numberOfSamples+audio2.numberOfSamples;
         for (typename std::vector<T>::iterator i=audio2.data_buffer.begin(); i!=audio2.data_buffer.end(); i++){
             data_buffer.push_back(*i);
@@ -165,15 +165,15 @@ namespace BRDAMY004{
     }
     
     template <typename T, int N>
-    Audio<T,N> & Audio<T,N>::operator+(Audio& audio2){
+    Audio<T,N> & Audio<T,N>::operator+(Audio<T,N> & audio2){
         typename std::vector<T>::iterator it2 = audio2.data_buffer.begin();
         for (typename std::vector<T>::iterator i=data_buffer.begin(); i!=data_buffer.end(); i++){
             T temp = *i + *it2;
-            if (bitSize == 8 && temp > INT8_MAX){
-                temp = INT8_MAX;
+            if (temp > std::numeric_limits<T>::max()){
+                temp = std::numeric_limits<T>::max();
             }
-            else if (bitSize == 16 && temp > INT16_MAX){
-                temp = INT16_MAX;
+            else  if (temp < std::numeric_limits<T>::min()){
+                temp = std::numeric_limits<T>::min();
             }
             *i = temp;
             it2++;
@@ -188,7 +188,7 @@ namespace BRDAMY004{
         for(int i=cf.first; i<cf.second; i++){
             newBuffer.push_back(data_buffer[i]);
         }
-        data_buffer.empty();
+        data_buffer.clear();
         data_buffer = newBuffer;
         numberOfSamples = cf.second - cf.first;
         
@@ -196,7 +196,7 @@ namespace BRDAMY004{
     }
     
     template <typename T,int N>
-    void Audio<T,N>::add(Audio& audio2){
+    void Audio<T,N>::add(Audio<T,N> & audio2){
         *this = *this + audio2;
     }
     
@@ -223,9 +223,114 @@ namespace BRDAMY004{
     }
     
     template <typename T,int N>
+    void Audio<T,N>::rangedAdd(Audio& audio2, int r1, int r2, int s1, int s2){
+        if (r1-r2 == s1-s2){
+            r1 = r1*sampleRate;
+            r2 = r2*sampleRate;
+            s1 = s1*sampleRate;
+            s2 = s2*sampleRate;
+            std::cout << r1 << ":" << r2 << ":" << s1 << ":" << s2 << std::endl;
+            std::vector<T> newBuffer1(r2-r1), newBuffer2(s2-s1);
+            std::copy(data_buffer.begin()+r1, data_buffer.begin()+r2, newBuffer1.begin());
+            std::copy(audio2.data_buffer.begin()+s1, audio2.data_buffer.begin()+s2, newBuffer2.begin());
+            data_buffer = newBuffer1;
+            numberOfSamples = data_buffer.size();
+            audio2.data_buffer = newBuffer2;
+            numberOfSamples = audio2.data_buffer.size();
+            *this = *this + audio2;
+        }
+        
+    }
+    
+    template <typename T,int N>
     Audio<T,N>::~Audio(){
         
     }
+    
+    
+    template <typename T>
+    
+    class Audio<T,2>{
+    private:
+        std::vector<std::pair<T,T>> data_buffer;
+        int sampleRate;
+        int bitSize;
+        int channel;
+        int numberOfSamples;
+        float seconds;
+    public:
+        void loadToBuffer(std::string fileName){
+            int fileSize;
+            std::ifstream stream(fileName, std::ios::binary);
+
+            stream.seekg(0, stream.end);
+            fileSize = stream.tellg();
+            stream.seekg(0, stream.beg);
+
+            numberOfSamples = fileSize / (sizeof(T) * channel);
+            seconds = numberOfSamples/(float) sampleRate;
+            int tempSamples = fileSize / (sizeof(T) * 1);
+            std::vector<T> tempVector(tempSamples);
+
+            stream.read((char *)&tempVector[0], numberOfSamples);
+
+            stream.close();
+            std::pair<T,T> tempPair;
+            for (int i=0; i<tempSamples; i++){
+                if (i%2==0){
+                    tempPair.first = tempVector[i];
+                }
+                else{
+                    tempPair.second = tempVector[i];
+                    data_buffer.push_back(tempPair);
+                }
+            }
+        }
+        
+        void writeToFile(std::string fileName){
+            
+            int fileSize = numberOfSamples * (sizeof(T) * channel);
+            int tempSamples = fileSize/(sizeof(T) * 1);
+            std::vector<T> tempVector;
+            
+            for (int i=0; i<numberOfSamples; i++){
+                tempVector.push_back(data_buffer[i].first);
+                tempVector.push_back(data_buffer[i].second);
+            }
+            
+            std::ofstream stream(fileName, std::ios::binary);
+            
+            stream.write((char *)&tempVector[0], tempSamples);
+        
+            stream.close();
+        }
+        
+        Audio & operator|(Audio & audio2){
+            
+        }
+        
+        Audio & operator*(std::pair<float,float> vf){
+            
+        }
+        
+        Audio & operator+(Audio & audio2){
+            
+        }
+        
+        Audio & operator^(std::pair<int,int> cf){
+            
+        }
+        
+        void add(Audio & audio2);
+        void cut(int r1, int r2);
+        void rangedAdd(Audio & audio2, int r1, int r2, int s1, int s2);
+        void concatenate(Audio & audio2);
+        void volume(float f1, float f2);
+        void reverse();
+        void rms();
+        void normalise();
+            
+    };
     
     
 }

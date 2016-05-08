@@ -71,6 +71,7 @@ int main(int argc, char** argv) {
             //audio.add(audio2);
             //audio.cut(300000, 600000);
             //audio.reverse();
+            //audio.rangedAdd(audio2, 6,12,8,14);
             audio.writeToFile(outputFile);
         }
         else if (temp == "-add"){
