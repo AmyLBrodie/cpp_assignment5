@@ -76,7 +76,8 @@ namespace BRDAMY004{
         void rms();
         void normalise(float r1, float r2);
         
-        
+        float calculateRMS();
+        std::vector<T> getBuffer();
     };
     
     template <typename T, typename N>
@@ -291,6 +292,17 @@ namespace BRDAMY004{
     }
     
     template <typename T,typename N>
+    float Audio<T,N>::calculateRMS(){
+        std::vector<T> squareVector;
+        for (typename std::vector<T>::iterator i=data_buffer.begin(); i!=data_buffer.end(); i++){
+            squareVector.push_back((*i)*(*i));
+        }
+        int squareSum = std::accumulate(squareVector.begin(), squareVector.end(), 0);
+        float c_rms = sqrt(squareSum/(float)numberOfSamples);
+        return c_rms;
+    }
+    
+    template <typename T,typename N>
     void Audio<T,N>::normalise(float r1, float r2){
         std::vector<T> squareVector;
         for (typename std::vector<T>::iterator i=data_buffer.begin(); i!=data_buffer.end(); i++){
@@ -300,6 +312,11 @@ namespace BRDAMY004{
         float c_rms = sqrt(squareSum/(float)numberOfSamples);
         Audio::normal norm(r1, c_rms);
         std::transform(data_buffer.begin(), data_buffer.end(), data_buffer.begin(), norm);
+    }
+    
+    template <typename T,typename N>
+    std::vector<T> Audio<T,N>::getBuffer(){
+        return data_buffer;
     }
     
     template <typename T,typename N>
@@ -520,18 +537,12 @@ namespace BRDAMY004{
         void add(Audio & audio2){
             *this = *this + audio2;
             
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
         }
         
         void cut(int r1, int r2){
             std::pair<int,int> range(r1,r2);
             *this = *this^range;
             
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
         }
         
         void rangedAdd(Audio & audio2, int r1, int r2, int s1, int s2){
@@ -550,26 +561,17 @@ namespace BRDAMY004{
                 numberOfSamples = audio2.data_buffer.size();
                 *this = *this + audio2;
             }
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
         }
         
         void concatenate(Audio & audio2){
             *this =  *this | audio2;
             
-            for (int i=0; i<numberOfSamples; i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
         }
         
         void volume(float f1, float f2){
             std::pair<float,float> factor(f1,f2);
             *this = *this * factor;
-            
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
+           
         }
         
         void reverse(){
@@ -591,10 +593,7 @@ namespace BRDAMY004{
                 }
             }
             data_buffer = temp_buffer2;
-            
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
+           
         }
         
         void rms(){
@@ -618,6 +617,19 @@ namespace BRDAMY004{
             std::cout << " " << std::endl;
         }
         
+        std::pair<float,float> calculateRMS(){
+            std::vector<T> squareVector1, squareVector2;
+            for (typename std::vector<std::pair<T,T>>::iterator i=data_buffer.begin(); i!=data_buffer.end(); i++){
+                squareVector1.push_back((i->first)*(i->first));
+                squareVector2.push_back((i->second)*(i->second));
+            }
+            int squareSum1 = std::accumulate(squareVector1.begin(), squareVector1.end(), 0);
+            int squareSum2 = std::accumulate(squareVector2.begin(), squareVector2.end(), 0);
+            float c_rms1 = sqrt(squareSum1/(float)numberOfSamples);
+            float c_rms2 = sqrt(squareSum2/(float)numberOfSamples);
+            return std::make_pair(c_rms1,c_rms2);
+        }
+        
         void normalise(float r1, float r2){
             std::vector<T> squareVector1, squareVector2;
             for (typename std::vector<std::pair<T,T>>::iterator i=data_buffer.begin(); i!=data_buffer.end(); i++){
@@ -631,9 +643,10 @@ namespace BRDAMY004{
             Audio::normal norm(c_rms1, c_rms2, r1, r2);
             std::transform(data_buffer.begin(), data_buffer.end(), data_buffer.begin(), norm);
             
-            for (int i=0; i<data_buffer.size(); i++){
-                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
-            }
+        }
+        
+        std::vector<std::pair<T,T>> getBuffer(){
+            return data_buffer;
         }
             
     };
