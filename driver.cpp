@@ -59,25 +59,6 @@ int main(int argc, char** argv) {
         }
         else if (temp == "-o"){
             outputFile = string(argv[i+1]);
-            //soundFile1 = "test3_44100_16_stereo.raw";
-            //soundFile2 = "test3_44100_16_stereo.raw";
-            //soundFile1 = "first1.raw";
-            //soundFile2 = "second1.raw";
-            //BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
-            //audio.loadToBuffer(soundFile1);
-            //audio.writeToFile(outputFile);
-            //BRDAMY004::Audio<int16_t,float> audio2(sampleRate, bitSize, channel);
-            //audio2.loadToBuffer(soundFile2);
-            //audio.concatenate(audio2);
-            //audio.volume(0.75f,0.5f);
-            //audio.add(audio2);
-            //audio.cut(0, 44100);
-            //audio.reverse();
-            //audio.rangedAdd(audio2, 0,1,0,1);
-            //audio.rms();
-            //audio.normalise(15.0f, 12.0f);
-            //audio.rms();
-            //audio.writeToFile(outputFile);
         }
         else if (temp == "-add"){
             soundFile1 = string(argv[i+1]);
@@ -209,7 +190,7 @@ int main(int argc, char** argv) {
                     BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
                     audio.loadToBuffer(soundFile1);
                     BRDAMY004::Audio<int8_t,int> audio1(sampleRate, bitSize, channel);
-                    audio1.loadToBuffer(soundFile1);
+                    audio1.loadToBuffer(soundFile2);
                     audio.concatenate(audio1);
                     audio.writeToFile(outputFile);
                 }
@@ -217,7 +198,7 @@ int main(int argc, char** argv) {
                     BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
                     audio.loadToBuffer(soundFile1);
                     BRDAMY004::Audio<int16_t,int> audio1(sampleRate, bitSize, channel);
-                    audio1.loadToBuffer(soundFile1);
+                    audio1.loadToBuffer(soundFile2);
                     audio.concatenate(audio1);
                     audio.writeToFile(outputFile);
                 }
@@ -227,7 +208,7 @@ int main(int argc, char** argv) {
                     BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
                     audio.loadToBuffer(soundFile1);
                     BRDAMY004::Audio<int8_t,float> audio1(sampleRate, bitSize, channel);
-                    audio1.loadToBuffer(soundFile1);
+                    audio1.loadToBuffer(soundFile2);
                     audio.concatenate(audio1);
                     audio.writeToFile(outputFile);
                 }
@@ -235,7 +216,7 @@ int main(int argc, char** argv) {
                     BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
                     audio.loadToBuffer(soundFile1);
                     BRDAMY004::Audio<int16_t,float> audio1(sampleRate, bitSize, channel);
-                    audio1.loadToBuffer(soundFile1);
+                    audio1.loadToBuffer(soundFile2);
                     audio.concatenate(audio1);
                     audio.writeToFile(outputFile);
                 }
