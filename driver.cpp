@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     int sampleRate;
     int bitSize;
     int channel;
-    string outputFile = "%", soundFile1, soundFile2;
+    string outputFile = "out", soundFile1, soundFile2;
     int r1, r2, s1, s2;
     float fr1, fr2;
     const int mono=1;
@@ -59,27 +59,66 @@ int main(int argc, char** argv) {
         }
         else if (temp == "-o"){
             outputFile = string(argv[i+1]);
-            soundFile1 = string(argv[i+2]);
-            soundFile2 = string(argv[i+3]);
-            BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
-            audio.loadToBuffer(soundFile1);
+            //soundFile1 = "test3_44100_16_stereo.raw";
+            //soundFile2 = "test3_44100_16_stereo.raw";
+            //soundFile1 = "first1.raw";
+            //soundFile2 = "second1.raw";
+            //BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+            //audio.loadToBuffer(soundFile1);
             //audio.writeToFile(outputFile);
-            BRDAMY004::Audio<int8_t,int> audio2(sampleRate, bitSize, channel);
-            audio2.loadToBuffer(soundFile2);
+            //BRDAMY004::Audio<int16_t,float> audio2(sampleRate, bitSize, channel);
+            //audio2.loadToBuffer(soundFile2);
             //audio.concatenate(audio2);
             //audio.volume(0.75f,0.5f);
             //audio.add(audio2);
-            //audio.cut(300000, 600000);
+            //audio.cut(0, 44100);
             //audio.reverse();
-            //audio.rangedAdd(audio2, 6,12,8,14);
-            audio.rms();
-            audio.normalise(6.0f, 0.0f);
-            audio.rms();
-            audio.writeToFile(outputFile);
+            //audio.rangedAdd(audio2, 0,1,0,1);
+            //audio.rms();
+            //audio.normalise(15.0f, 12.0f);
+            //audio.rms();
+            //audio.writeToFile(outputFile);
         }
         else if (temp == "-add"){
             soundFile1 = string(argv[i+1]);
             soundFile2 = string(argv[i+2]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.add(audio1);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.add(audio1);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.add(audio1);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.add(audio1);
+                    audio.writeToFile(outputFile);
+                }
+            }
+           
             break;
         }
         else if (temp == "-cut"){
@@ -87,6 +126,34 @@ int main(int argc, char** argv) {
             istringstream iss(temp);
             iss >> r1 >> r2;
             soundFile1 = string(argv[i+3]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.cut(r1, r2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.cut(r1, r2);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.cut(r1, r2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.cut(r1, r2);
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
         else if (temp == "-radd"){
@@ -95,11 +162,84 @@ int main(int argc, char** argv) {
             iss >> r1 >> r2 >> s1 >> s2;
             soundFile1 = string(argv[i+5]);
             soundFile2 = string(argv[i+6]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.rangedAdd(audio1, r1, r2, s1, s2);
+                    audio.writeToFile(outputFile);
+                    
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.rangedAdd(audio1, r1, r2, s1, s2);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.rangedAdd(audio1, r1, r2, s1, s2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile2);
+                    audio.rangedAdd(audio1, r1, r2, s1, s2);
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
         else if (temp == "-cat"){
             soundFile1 = string(argv[i+1]);
             soundFile2 = string(argv[i+2]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile1);
+                    audio.concatenate(audio1);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,int> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile1);
+                    audio.concatenate(audio1);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int8_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile1);
+                    audio.concatenate(audio1);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    BRDAMY004::Audio<int16_t,float> audio1(sampleRate, bitSize, channel);
+                    audio1.loadToBuffer(soundFile1);
+                    audio.concatenate(audio1);
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
         else if (temp == "-v"){
@@ -107,14 +247,94 @@ int main(int argc, char** argv) {
             istringstream iss(temp);
             iss >> fr1 >> fr2;
             soundFile1 = string(argv[i+3]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.volume(fr1,fr2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.volume(fr1,fr2);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.volume(fr1,fr2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.volume(fr1,fr2);
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
         else if (temp == "-rev"){
             soundFile1 = string(argv[i+1]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.reverse();
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.reverse();
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.reverse();
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.reverse();
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
         else if (temp == "-rms"){
             soundFile1 = string(argv[i+1]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.rms();
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.rms();
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.rms();
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.rms();
+                }
+            }
             break;
         }
         else if (temp == "-norm"){
@@ -122,6 +342,34 @@ int main(int argc, char** argv) {
             istringstream iss(temp);
             iss >> fr1 >> fr2;
             soundFile1 = string(argv[i+3]);
+            if (channel == 1){
+                if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.normalise(fr1, fr2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,int> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.normalise(fr1, fr2);
+                    audio.writeToFile(outputFile);
+                }
+            }
+            else{
+                 if (bitSize == 8){
+                    BRDAMY004::Audio<int8_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.normalise(fr1, fr2);
+                    audio.writeToFile(outputFile);
+                }
+                else{
+                    BRDAMY004::Audio<int16_t,float> audio(sampleRate, bitSize, channel);
+                    audio.loadToBuffer(soundFile1);
+                    audio.normalise(fr1, fr2);
+                    audio.writeToFile(outputFile);
+                }
+            }
             break;
         }
     }

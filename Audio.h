@@ -160,6 +160,13 @@ namespace BRDAMY004{
     
     template <typename T,typename N>
     void Audio<T,N>::writeToFile(std::string fileName){
+        
+        std::ostringstream oss;
+        oss << sampleRate;
+        fileName += "_" + oss.str();
+        oss << bitSize;
+        fileName += "_" + oss.str() + "_mono.raw";
+        
         std::ofstream stream(fileName, std::ios::binary);
         
         stream.write((char *)&data_buffer[0], Audio::numberOfSamples);
@@ -379,7 +386,7 @@ namespace BRDAMY004{
 
             numberOfSamples = fileSize / (sizeof(T) * channel);
             seconds = numberOfSamples/(float) sampleRate;
-            int tempSamples = fileSize / (sizeof(T) * 1);
+            int tempSamples = fileSize;
             std::vector<T> tempVector(tempSamples);
 
             stream.read((char *)&tempVector[0], tempSamples);
@@ -395,13 +402,21 @@ namespace BRDAMY004{
                     data_buffer.push_back(tempPair);
                 }
             }
+            data_buffer.resize(numberOfSamples);
             std::cout << fileSize << ":" << seconds << std::endl;
         }
         
         void writeToFile(std::string fileName){
             
+            std::ostringstream oss;
+            oss << sampleRate;
+            fileName += "_" + oss.str();
+            std::ostringstream oss1;
+            oss1 << bitSize;
+            fileName += "_" + oss1.str() + "_stereo.raw";
+            
             int fileSize = numberOfSamples * (sizeof(T) * channel);
-            int tempSamples = fileSize/(sizeof(T) * 1);
+            int tempSamples = fileSize;
             std::vector<T> tempVector;
             std::cout << fileSize << ":" << numberOfSamples << std::endl;
             
@@ -410,7 +425,7 @@ namespace BRDAMY004{
                 tempVector.push_back(i->second);
             }
             
-            std::ofstream stream(fileName, std::ios::binary);
+            std::ofstream stream(fileName.c_str(), std::ios::binary);
             
             stream.write((char *)&tempVector[0], tempSamples);
         
@@ -421,7 +436,7 @@ namespace BRDAMY004{
         private:
             float current1, current2, desired1, desired2;
         public:
-            normal(float c_rms1=0.0f, float c_rms2=0.0f, float rms1=0.0f, float rms2=0.0f) : current1(c_rms1), current2(c_rms2), desired1(rms), desired2(rms2){
+            normal(float c_rms1=0.0f, float c_rms2=0.0f, float rms1=0.0f, float rms2=0.0f) : current1(c_rms1), current2(c_rms2), desired1(rms1), desired2(rms2){
                 
             }
             
@@ -504,11 +519,19 @@ namespace BRDAMY004{
         
         void add(Audio & audio2){
             *this = *this + audio2;
+            
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void cut(int r1, int r2){
             std::pair<int,int> range(r1,r2);
             *this = *this^range;
+            
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void rangedAdd(Audio & audio2, int r1, int r2, int s1, int s2){
@@ -527,19 +550,51 @@ namespace BRDAMY004{
                 numberOfSamples = audio2.data_buffer.size();
                 *this = *this + audio2;
             }
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void concatenate(Audio & audio2){
             *this =  *this | audio2;
+            
+            for (int i=0; i<numberOfSamples; i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void volume(float f1, float f2){
             std::pair<float,float> factor(f1,f2);
             *this = *this * factor;
+            
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void reverse(){
-            std::reverse(data_buffer.begin(), data_buffer.end());
+            std::vector<T> temp_buffer;
+            for (int i=0; i<numberOfSamples; i++){
+                temp_buffer.push_back(data_buffer[i].first);
+                temp_buffer.push_back(data_buffer[i].second);
+            }
+            std::reverse(temp_buffer.begin(), temp_buffer.end());
+            std::pair<T,T> tempPair;
+            std::vector<std::pair<T,T>> temp_buffer2;
+            for (int i=0; i<temp_buffer.size(); i++){
+                if (i%2==0){
+                    tempPair.second = temp_buffer[i];
+                }
+                else{
+                    tempPair.first = temp_buffer[i];
+                    temp_buffer2.push_back(tempPair);
+                }
+            }
+            data_buffer = temp_buffer2;
+            
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
         
         void rms(){
@@ -555,10 +610,10 @@ namespace BRDAMY004{
             
             auto left_rms = compute(squareSum1);
             auto right_rms = compute(squareSum2);
-            std::cout << "The RMS value of the left channel of audio file is: ";
+            std::cout << "The RMS value of the left channel of the audio file is: ";
             std::cout << left_rms;
             std::cout << " " << std::endl;
-            std::cout << "The RMS value of the right channel of audio file is: ";
+            std::cout << "The RMS value of the right channel of the audio file is: ";
             std::cout << right_rms;
             std::cout << " " << std::endl;
         }
@@ -574,6 +629,11 @@ namespace BRDAMY004{
             float c_rms1 = sqrt(squareSum1/(float)numberOfSamples);
             float c_rms2 = sqrt(squareSum2/(float)numberOfSamples);
             Audio::normal norm(c_rms1, c_rms2, r1, r2);
+            std::transform(data_buffer.begin(), data_buffer.end(), data_buffer.begin(), norm);
+            
+            for (int i=0; i<data_buffer.size(); i++){
+                std::cout << "l: " << (int) data_buffer[i].first << "   r: " << (int) data_buffer[i].second << std::endl; 
+            }
         }
             
     };
